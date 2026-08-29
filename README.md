@@ -187,21 +187,35 @@ POST /users/{id}/reset-password/
 
 Used from the Staff page key icon. Platform admins can reset any user. Owners can reset only waiter and chef accounts in their own restaurant.
 
-## Production Build
+## Production Deployment
 
-Before building for production, set:
+The frontend is deployed on Vercel:
+
+```txt
+https://resturantordering-wheat.vercel.app/login
+```
+
+Vercel builds the React app into static files from the `dist/` directory. The backend remains deployed separately at:
+
+```txt
+https://restohubapi.duckdns.org/api
+```
+
+In Vercel, set this environment variable:
 
 ```env
 VITE_API_BASE_URL=https://restohubapi.duckdns.org/api
 ```
 
-Then run:
+The project uses:
 
-```powershell
-npm run build
+```txt
+Build command: npm run build
+Output directory: dist
+Framework preset: Vite
 ```
 
-Deploy the generated `dist/` folder to a static hosting service such as AWS S3 with CloudFront, AWS Amplify, Vercel, Netlify, or another static frontend host.
+The backend must also allow the Vercel frontend URL in `CORS_ALLOWED_ORIGINS`, otherwise browser requests from Vercel will be blocked.
 
 ## Notes
 
