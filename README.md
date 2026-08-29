@@ -13,6 +13,20 @@ The app is role-aware. After login, the backend returns the current user, then t
 
 The frontend hides unavailable actions, but the backend is still the real source of permission checks.
 
+## Project Overview
+
+RestoHub is built for restaurants that need a simple internal system for daily operations. Instead of using separate tools for tables, staff, menus, and kitchen orders, the app keeps those workflows in one dashboard.
+
+A platform admin can manage the whole system. They can create restaurant owners, create restaurants, and supervise the data across all restaurants. This role is useful for the company or SaaS owner who controls the platform.
+
+A restaurant owner manages only their own restaurant. They can create waiter and chef accounts, manage menu items, organize tables, and follow orders. This keeps each restaurant isolated from the others while still using the same backend.
+
+Waiters use the app during service. They can select a table, add menu items, send an order, and track whether it is pending, preparing, ready, or served.
+
+Chefs use the kitchen screen to see active orders and update the preparation flow. The goal is to make the kitchen view focused, fast, and easy to scan during busy hours.
+
+The frontend is mainly responsible for giving each role a clean workflow. The backend stores the data, checks permissions, handles authentication, and protects the real business rules.
+
 ## Features
 
 - JWT login and automatic token refresh.
