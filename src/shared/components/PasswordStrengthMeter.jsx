@@ -17,6 +17,13 @@ function getPasswordRequirements(password) {
 
 const labels = ["Too short", "Weak", "Fair", "Good", "Strong"];
 const tones = ["empty", "weak", "fair", "good", "strong"];
+const progressTones = {
+  empty: "bg-slate-300",
+  weak: "bg-red-500",
+  fair: "bg-amber-500",
+  good: "bg-blue-500",
+  strong: "bg-emerald-500",
+};
 
 export function PasswordStrengthMeter({ password }) {
   const score = getPasswordScore(password);
@@ -27,17 +34,17 @@ export function PasswordStrengthMeter({ password }) {
   const progress = `${Math.max(score, password ? 1 : 0) * 25}%`;
 
   return (
-    <div className={`password-meter password-meter--${tone}`} aria-live="polite">
-      <div className="password-meter__header">
+    <div className={`password-meter password-meter--${tone} mt-0.5 grid gap-2 rounded-[10px] border border-[#f2e7e3] bg-[#fffaf8] p-2.5`} aria-live="polite">
+      <div className="password-meter__header flex items-center justify-between gap-2 text-[0.68rem] text-[#74676a]">
         <span>{label}</span>
-        <strong>{characterCount} characters</strong>
+        <strong className="text-[#2f2325]">{characterCount} characters</strong>
       </div>
-      <div className="password-meter__track">
-        <span style={{ width: progress }} />
+      <div className="password-meter__track h-1.5 overflow-hidden rounded-full bg-[#eee4e0]">
+        <span className={`block h-full rounded-full transition-all ${progressTones[tone]}`} style={{ width: progress }} />
       </div>
-      <div className="password-meter__checks">
+      <div className="password-meter__checks flex flex-wrap gap-1.5">
         {requirements.map((requirement) => (
-          <span className={requirement.met ? "is-met" : ""} key={requirement.label}>
+          <span className={`rounded-full px-2 py-1 text-[0.62rem] leading-none ${requirement.met ? "is-met bg-emerald-100 text-emerald-700" : "bg-black/[0.035] text-[#9a8c8f]"}`} key={requirement.label}>
             {requirement.label}
           </span>
         ))}

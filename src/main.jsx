@@ -6,8 +6,7 @@ import { AuthProvider } from "./features/auth/AuthProvider";
 import { queryClient } from "./lib/queryClient";
 import { router } from "./router";
 import { ToastProvider } from "./shared/components/ToastProvider";
-import "./styles/index.css";
-import "./styles/experience.css";
+import "./styles/tailwind.css";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>

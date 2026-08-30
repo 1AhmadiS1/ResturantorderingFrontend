@@ -45,6 +45,7 @@ The frontend is mainly responsible for giving each role a clean workflow. The ba
 
 - React
 - Vite
+- Tailwind CSS
 - React Router
 - TanStack Query
 - Axios
@@ -136,7 +137,7 @@ src/
   lib/                 Axios client, auth storage, query client
   router/              Lazy routes and auth/role guards
   shared/              Reusable UI components, hooks, and utilities
-  styles/              Global application CSS
+  styles/              Tailwind entry point, theme, and compatibility styles
 ```
 
 ## API Flow
