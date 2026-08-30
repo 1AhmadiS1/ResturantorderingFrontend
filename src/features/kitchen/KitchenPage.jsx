@@ -9,17 +9,19 @@ import { StatusBadge } from "../../shared/components/StatusBadge";
 import { useToast } from "../../shared/components/ToastProvider";
 import { formatRelativeTime, titleCase } from "../../shared/utils/formatters";
 import { useAuth } from "../auth/AuthProvider";
+import { useRestaurantScope } from "../restaurants/useRestaurantScope";
 import { allowedTransitions } from "../orders/orderRules";
 
 export default function KitchenPage() {
   const { user } = useAuth();
+  const { restaurantId } = useRestaurantScope();
   const { showToast } = useToast();
   const queryClient = useQueryClient();
   const [filter, setFilter] = useState("active");
   const [updatingId, setUpdatingId] = useState(null);
   const ordersQuery = useQuery({
-    queryKey: ["kitchen-orders"],
-    queryFn: () => getCollection("/orders/", { limit: 500, ordering: "created_at" }),
+    queryKey: ["kitchen-orders", restaurantId],
+    queryFn: () => getCollection("/orders/", { limit: 500, ordering: "created_at", restuarant: restaurantId || undefined }),
     refetchInterval: 15_000,
   });
   const mutation = useMutation({
@@ -35,16 +37,23 @@ export default function KitchenPage() {
     return orders.filter((order) => order.status === filter);
   }, [ordersQuery.data, filter]);
 
+  const orders = ordersQuery.data?.results || [];
+  const statusCount = (status) => status === "active"
+    ? orders.filter((order) => ["pending", "preparing"].includes(order.status)).length
+    : orders.filter((order) => order.status === status).length;
+
   const updateStatus = (order, status) => { setUpdatingId(order.id); mutation.mutate({ id: order.id, status }); };
 
   return <div className="page-stack kitchen-page">
-    <PageHeader eyebrow="Kitchen display" title="Kitchen queue" description="Tickets refresh automatically every 15 seconds so the team stays in sync." actions={<Button variant="secondary" onClick={() => ordersQuery.refetch()}><RefreshCw size={17} className={ordersQuery.isFetching ? "spin" : ""} /> Refresh</Button>} />
-    <div className="status-tabs" role="tablist">{[["active", "In progress"], ["pending", "Pending"], ["preparing", "Preparing"], ["ready", "Ready"]].map(([value, label]) => <button key={value} className={filter === value ? "is-active" : ""} onClick={() => setFilter(value)}>{label}</button>)}</div>
+    <PageHeader title="Kitchen" description="Cook, tap, done." actions={<div className="kitchen-live-actions"><span className="live-indicator"><i /> Live</span><Button variant="secondary" onClick={() => ordersQuery.refetch()}><RefreshCw size={17} className={ordersQuery.isFetching ? "spin" : ""} /> Refresh</Button></div>} />
+    <div className="status-tabs" role="tablist">{[["active", "In progress"], ["pending", "New"], ["preparing", "Cooking"], ["ready", "Ready"]].map(([value, label]) => <button key={value} className={filter === value ? "is-active" : ""} onClick={() => setFilter(value)}>{label}<span>{statusCount(value)}</span></button>)}</div>
     {ordersQuery.isLoading ? <LoadingState label="Loading the kitchen queue..." /> : ordersQuery.isError ? <ErrorState onRetry={ordersQuery.refetch} /> : visibleOrders.length ? <section className="kitchen-grid">
       {visibleOrders.map((order) => {
         const transitions = allowedTransitions(order.status, user.role).filter((status) => status !== "served");
-        return <article className={`kitchen-ticket kitchen-ticket--${order.status}`} key={order.id}>
-          <header><div><span>Order #{order.id}</span><h2>Table {order.table_number}</h2></div><StatusBadge status={order.status} /></header>
+        const ageMinutes = Math.max(0, (ordersQuery.dataUpdatedAt - new Date(order.created_at).getTime()) / 60_000);
+        const urgency = ageMinutes >= 20 ? "late" : ageMinutes >= 10 ? "attention" : "normal";
+        return <article className={`kitchen-ticket kitchen-ticket--${order.status} kitchen-ticket--${urgency}`} key={order.id}>
+          <header><div><span>Order #{order.id}</span><h2>Table {order.table_number}</h2><small>{order.restaurant_name}</small></div><StatusBadge status={order.status} /></header>
           <div className="kitchen-ticket__time"><Clock3 size={16} /><span>{formatRelativeTime(order.created_at)}</span></div>
           <div className="kitchen-ticket__items">{order.items.map((item) => <div key={item.id || item.menu_item}><strong>{item.quantity}</strong><span>{item.menu_item_name}</span></div>)}</div>
           {order.note && <div className="kitchen-ticket__note"><strong>Note</strong><p>{order.note}</p></div>}
@@ -54,4 +63,3 @@ export default function KitchenPage() {
     </section> : <EmptyState title="Kitchen is clear" message={filter === "active" ? "There are no pending or preparing orders right now." : `No ${filter} orders right now.`} />}
   </div>;
 }
-

@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ROLE_LABELS } from "../../config";
 import { useAuth } from "../../features/auth/AuthProvider";
+import { restaurantWorkspacePath, useRestaurantScope } from "../../features/restaurants/useRestaurantScope";
 import { navigation } from "./navigation";
 
 export function Header({ onOpenMenu }) {
@@ -10,13 +11,17 @@ export function Header({ onOpenMenu }) {
   const location = useLocation();
   const navigate = useNavigate();
   const [profileOpen, setProfileOpen] = useState(false);
-  const current = navigation.find((item) => location.pathname.startsWith(item.to));
+  const { restaurantId, restaurant, isRestaurantWorkspace } = useRestaurantScope();
+  const current = navigation.find((item) => {
+    const itemPath = restaurantWorkspacePath(isRestaurantWorkspace && item.restaurantScoped ? restaurantId : null, item.to);
+    return location.pathname === itemPath || location.pathname.startsWith(`${itemPath}/`);
+  });
 
   return (
     <header className="topbar">
       <div className="topbar__title">
         <button className="icon-button topbar__menu" onClick={onOpenMenu} aria-label="Open menu"><Menu size={22} /></button>
-        <div><span>RestoHub workspace</span><strong>{current?.label || "Overview"}</strong></div>
+        <div><span>{restaurant?.name || "RestoHub workspace"}</span><strong>{current?.label || "Overview"}</strong></div>
       </div>
       <div className="profile-menu">
         <button className="profile-menu__trigger" onClick={() => setProfileOpen((value) => !value)} aria-expanded={profileOpen}>
@@ -31,4 +36,3 @@ export function Header({ onOpenMenu }) {
     </header>
   );
 }
-

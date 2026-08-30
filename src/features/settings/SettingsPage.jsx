@@ -12,14 +12,14 @@ export default function SettingsPage() {
   return (
     <div className="page-stack settings-page">
       <PageHeader
-        eyebrow="Your account"
         title="Settings"
-        description="Review your access and keep your password secure."
+        description="Your account and password."
         actions={(
           <button
             className="icon-button icon-button--accent"
             onClick={() => setChangePasswordOpen(true)}
             title="Change password"
+            data-tooltip="Change password"
             aria-label="Change password"
           >
             <KeyRound size={19} />

@@ -4,12 +4,14 @@ import { useForm } from "react-hook-form";
 import { Button } from "../../shared/components/Button";
 import { FormField } from "../../shared/components/FormField";
 import { Modal } from "../../shared/components/Modal";
+import { PasswordStrengthMeter } from "../../shared/components/PasswordStrengthMeter";
 
 export function ResetPasswordModal({ open, member, loading, error, onClose, onSubmit }) {
   const [showPassword, setShowPassword] = useState(false);
   const { register, handleSubmit, reset, watch, formState: { errors } } = useForm({
     defaultValues: { new_password: "", confirm_password: "" },
   });
+  const newPassword = watch("new_password") || "";
 
   useEffect(() => {
     if (open) reset({ new_password: "", confirm_password: "" });
@@ -34,6 +36,7 @@ export function ResetPasswordModal({ open, member, loading, error, onClose, onSu
               minLength: { value: 8, message: "Use at least 8 characters" },
             })}
           />
+          <PasswordStrengthMeter password={newPassword} />
         </FormField>
         <FormField label="Confirm password" required error={errors.confirm_password?.message}>
           <input

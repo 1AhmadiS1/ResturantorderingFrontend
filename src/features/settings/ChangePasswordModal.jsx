@@ -6,6 +6,7 @@ import { apiClient, getApiError } from "../../lib/apiClient";
 import { Button } from "../../shared/components/Button";
 import { FormField } from "../../shared/components/FormField";
 import { Modal } from "../../shared/components/Modal";
+import { PasswordStrengthMeter } from "../../shared/components/PasswordStrengthMeter";
 import { useToast } from "../../shared/components/ToastProvider";
 
 export function ChangePasswordModal({ open, onClose }) {
@@ -15,6 +16,7 @@ export function ChangePasswordModal({ open, onClose }) {
   const { register, handleSubmit, reset, watch, formState: { errors } } = useForm({
     defaultValues: { old_password: "", new_password: "", confirm_password: "" },
   });
+  const newPassword = watch("new_password") || "";
 
   useEffect(() => {
     if (open) {
@@ -67,6 +69,7 @@ export function ChangePasswordModal({ open, onClose }) {
               minLength: { value: 8, message: "Use at least 8 characters" },
             })}
           />
+          <PasswordStrengthMeter password={newPassword} />
         </FormField>
         <FormField label="Confirm new password" required error={errors.confirm_password?.message}>
           <input

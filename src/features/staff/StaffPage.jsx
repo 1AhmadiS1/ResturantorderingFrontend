@@ -12,6 +12,7 @@ import { useToast } from "../../shared/components/ToastProvider";
 import { useDebouncedValue } from "../../shared/hooks/useDebouncedValue";
 import { titleCase } from "../../shared/utils/formatters";
 import { useAuth } from "../auth/AuthProvider";
+import { useRestaurantScope } from "../restaurants/useRestaurantScope";
 import { ResetPasswordModal } from "./ResetPasswordModal";
 import { StaffFormModal } from "./StaffFormModal";
 
@@ -19,6 +20,7 @@ const PAGE_SIZE = 10;
 
 export default function StaffPage() {
   const { user } = useAuth();
+  const { restaurantId, restaurant } = useRestaurantScope();
   const { showToast } = useToast();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
@@ -33,10 +35,11 @@ export default function StaffPage() {
   useEffect(() => setOffset(0), [debouncedSearch, role]);
 
   const staffQuery = useQuery({
-    queryKey: ["staff", { search: debouncedSearch, role, offset }],
+    queryKey: ["staff", { restaurantId, search: debouncedSearch, role, offset }],
     queryFn: () => getCollection("/users/", {
       search: debouncedSearch || undefined,
       role: role || undefined,
+      restaurant: restaurantId || undefined,
       limit: PAGE_SIZE,
       offset,
     }),
@@ -45,7 +48,10 @@ export default function StaffPage() {
   const restaurantsQuery = useQuery({
     queryKey: ["restaurants", "options"],
     queryFn: () => getCollection("/restaurants/", { limit: 100 }),
+    enabled: !restaurantId,
   });
+
+  const restaurantOptions = restaurantId && restaurant ? [restaurant] : restaurantsQuery.data?.results || [];
 
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: ["staff"] });
@@ -99,9 +105,8 @@ export default function StaffPage() {
   return (
     <div className="page-stack">
       <PageHeader
-        eyebrow="People & access"
         title="Staff"
-        description="Create accounts and give each person only the access their work requires."
+        description="Manage your team and access."
         actions={<Button onClick={() => setForm({ open: true, member: null })}><Plus size={18} /> Add member</Button>}
       />
 
@@ -111,7 +116,7 @@ export default function StaffPage() {
           <option value="">All roles</option>
           <option value="waiter">Waiters</option>
           <option value="chef">Chefs</option>
-          {user.role === "platform_admin" && (
+          {user.role === "platform_admin" && !restaurantId && (
             <>
               <option value="owner">Owners</option>
               <option value="platform_admin">Platform admins</option>
@@ -143,6 +148,7 @@ export default function StaffPage() {
                     <button
                       onClick={() => openResetPassword(member)}
                       title="Reset password"
+                      data-tooltip="Reset password"
                       aria-label={`Reset password for ${member.email}`}
                     >
                       <KeyRound size={17} />
@@ -150,6 +156,7 @@ export default function StaffPage() {
                     <button
                       onClick={() => setForm({ open: true, member })}
                       title="Edit user"
+                      data-tooltip="Edit user"
                       aria-label={`Edit ${member.email}`}
                     >
                       <Pencil size={17} />
@@ -158,6 +165,7 @@ export default function StaffPage() {
                       className="danger"
                       onClick={() => setDeleteMember(member)}
                       title="Remove user"
+                      data-tooltip="Remove user"
                       aria-label={`Remove ${member.email}`}
                     >
                       <Trash2 size={17} />
@@ -179,8 +187,8 @@ export default function StaffPage() {
       <StaffFormModal
         open={form.open}
         member={form.member}
-        actorRole={user.role}
-        restaurants={restaurantsQuery.data?.results || []}
+        actorRole={restaurantId ? "owner" : user.role}
+        restaurants={restaurantOptions}
         loading={saveMutation.isPending}
         onClose={() => setForm({ open: false, member: null })}
         onSubmit={(data) => saveMutation.mutate({ data, member: form.member })}
