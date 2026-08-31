@@ -76,7 +76,7 @@ export default function DashboardPage() {
   const firstName = user.first_name || user.email.split("@")[0];
 
   return (
-    <div className="page-stack flex flex-col gap-3.5 sm:gap-5">
+    <div className="page-stack flex min-w-0 max-w-full flex-col gap-3.5 overflow-x-hidden sm:gap-5">
       <div className="dashboard-welcome flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-end sm:gap-5">
         <div>
           <span className="eyebrow text-[0.64rem] font-extrabold uppercase tracking-[0.1em] text-brand-600">Today</span>
@@ -100,11 +100,11 @@ export default function DashboardPage() {
       </section>
 
       {mainHighlight && (
-        <section className="menu-showcase grid gap-2.5 lg:grid-cols-[minmax(280px,1.618fr)_minmax(320px,1fr)] lg:gap-4">
-          <Link to={pathFor("/menu")} className="menu-showcase__hero relative isolate flex min-h-[154px] items-end overflow-hidden rounded-xl border border-[#eadbd6] bg-white p-3.5 shadow-[0_12px_32px_rgba(91,49,42,.08)] transition hover:border-brand-300 sm:min-h-[210px] sm:p-5">
+        <section className="menu-showcase grid min-w-0 max-w-full grid-cols-1 gap-2.5 overflow-hidden lg:grid-cols-[minmax(280px,1.618fr)_minmax(320px,1fr)] lg:gap-4">
+          <Link to={pathFor("/menu")} className="menu-showcase__hero relative isolate flex min-h-[154px] min-w-0 max-w-full items-end overflow-hidden rounded-xl border border-[#eadbd6] bg-white p-3.5 shadow-[0_12px_32px_rgba(91,49,42,.08)] transition hover:border-brand-300 sm:min-h-[210px] sm:p-5">
             <div className="menu-showcase__image absolute inset-0 -z-20 grid place-items-center overflow-hidden bg-brand-100 text-brand-600">
               {mainHighlight.image ? (
-                <img className="size-full object-cover saturate-[1.12]" src={mainHighlight.image} alt={mainHighlight.name} />
+                <img className="h-full w-full max-w-full object-cover saturate-[1.12]" src={mainHighlight.image} alt={mainHighlight.name} />
               ) : (
                 <UtensilsCrossed size={42} aria-hidden="true" />
               )}
@@ -117,12 +117,12 @@ export default function DashboardPage() {
             </div>
           </Link>
 
-          <div className="menu-showcase__grid -mx-3 flex snap-x gap-2 overflow-x-auto px-3 pb-1 lg:mx-0 lg:grid lg:grid-cols-2 lg:overflow-visible lg:px-0 lg:pb-0">
+          <div className="menu-showcase__grid flex w-full max-w-full snap-x gap-2 overflow-x-auto overscroll-x-contain pb-1 lg:grid lg:grid-cols-2 lg:overflow-visible lg:pb-0">
             {secondaryHighlights.map((item) => (
-              <Link to={pathFor("/menu")} className="menu-showcase__card grid min-h-[74px] min-w-[232px] snap-start grid-cols-[62px_minmax(0,1fr)] items-center gap-2.5 overflow-hidden rounded-xl border border-[#eadbd6] bg-white p-2 shadow-[0_12px_32px_rgba(91,49,42,.08)] transition hover:border-brand-300 lg:min-h-[110px] lg:min-w-0 lg:grid-cols-[92px_1fr]" key={item.id}>
+              <Link to={pathFor("/menu")} className="menu-showcase__card grid min-h-[74px] min-w-[min(232px,calc(100vw-48px))] max-w-[calc(100vw-48px)] snap-start grid-cols-[62px_minmax(0,1fr)] items-center gap-2.5 overflow-hidden rounded-xl border border-[#eadbd6] bg-white p-2 shadow-[0_12px_32px_rgba(91,49,42,.08)] transition hover:border-brand-300 lg:min-h-[110px] lg:min-w-0 lg:max-w-none lg:grid-cols-[92px_1fr]" key={item.id}>
                 <div className="menu-showcase__thumb grid size-[62px] place-items-center overflow-hidden rounded-lg bg-brand-100 text-brand-600 lg:size-[92px] lg:rounded-xl">
                   {item.image ? (
-                    <img className="size-full object-cover saturate-[1.12]" src={item.image} alt={item.name} />
+                    <img className="h-full w-full max-w-full object-cover saturate-[1.12]" src={item.image} alt={item.name} />
                   ) : (
                     <UtensilsCrossed size={25} aria-hidden="true" />
                   )}
@@ -137,7 +137,7 @@ export default function DashboardPage() {
         </section>
       )}
 
-      <section className="dashboard-grid grid gap-3 lg:grid-cols-[minmax(0,1.618fr)_minmax(280px,1fr)] lg:gap-4">
+      <section className="dashboard-grid grid min-w-0 max-w-full grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1.618fr)_minmax(280px,1fr)] lg:gap-4">
         <article className="panel panel--wide overflow-hidden rounded-xl border border-[#eadbd6] bg-white p-3.5 shadow-[0_12px_36px_rgba(91,49,42,.07)] sm:p-5">
           <div className="panel__header mb-3 flex items-center justify-between gap-3 sm:mb-4">
             <div>

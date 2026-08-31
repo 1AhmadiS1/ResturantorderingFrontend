@@ -748,7 +748,19 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
   }
 
   .menu-showcase { gap: 10px; }
+  .menu-showcase,
+  .dashboard-grid {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    grid-template-columns: minmax(0, 1fr);
+    overflow: hidden;
+  }
+
   .menu-showcase__hero {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
     min-height: 154px;
     padding: 14px;
     border-radius: 12px;
@@ -765,14 +777,18 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
   .menu-showcase__grid {
     display: flex;
     gap: 9px;
-    margin: 0 -12px;
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
     overflow-x: auto;
-    padding: 0 12px 4px;
+    padding: 0 0 4px;
     scroll-snap-type: x proximity;
   }
 
   .menu-showcase__card {
-    min-width: 232px;
+    flex: 0 0 min(232px, calc(100vw - 48px));
+    min-width: min(232px, calc(100vw - 48px));
+    max-width: calc(100vw - 48px);
     min-height: 74px;
     grid-template-columns: 62px minmax(0, 1fr);
     gap: 9px;

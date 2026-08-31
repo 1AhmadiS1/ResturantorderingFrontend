@@ -4,8 +4,11 @@ import { Button } from "../../shared/components/Button";
 import { FormField } from "../../shared/components/FormField";
 import { Modal } from "../../shared/components/Modal";
 
-export function MenuItemFormModal({ open, item, menus, onClose, onSubmit, loading }) {
+const DEFAULT_CATEGORIES = ["Appetizer", "Main", "Burger", "Pizza", "Pasta", "Dessert", "Drink"];
+
+export function MenuItemFormModal({ open, item, menus, categories = [], onClose, onSubmit, loading }) {
   const { register, handleSubmit, reset, formState: { errors } } = useForm();
+  const categoryOptions = [...new Set([...DEFAULT_CATEGORIES, ...categories].filter(Boolean))].sort();
   useEffect(() => { if (open) reset({ name: item?.name || "", category: item?.category || "", price: item?.price || "", description: item?.description || "", menu: item?.menu || menus[0]?.id || "" }); }, [open, item, menus, reset]);
   const submit = (values) => {
     const formData = new FormData();
@@ -20,7 +23,12 @@ export function MenuItemFormModal({ open, item, menus, onClose, onSubmit, loadin
   return <Modal open={open} onClose={onClose} title={item ? "Edit menu item" : "Add menu item"} description="Keep names and categories short so they are easy to scan during service.">
     <form className="form-grid" onSubmit={handleSubmit(submit)}>
       <FormField label="Item name" required error={errors.name?.message}><input {...register("name", { required: "Name is required" })} /></FormField>
-      <FormField label="Category" required error={errors.category?.message}><input placeholder="Main, Drinks, Dessert..." {...register("category", { required: "Category is required" })} /></FormField>
+      <FormField label="Category" required error={errors.category?.message}>
+        <select {...register("category", { required: "Category is required" })}>
+          <option value="">Choose category</option>
+          {categoryOptions.map((category) => <option value={category} key={category}>{category}</option>)}
+        </select>
+      </FormField>
       <FormField label="Price" required error={errors.price?.message}><input type="number" min="0.01" step="0.01" {...register("price", { required: "Price is required", min: { value: 0.01, message: "Price must be greater than zero" } })} /></FormField>
       <FormField label="Menu" required error={errors.menu?.message}><select {...register("menu", { required: "Menu is required" })}>{menus.map((menu) => <option value={menu.id} key={menu.id}>{menu.name} · {menu.restaurant_name}</option>)}</select></FormField>
       <FormField label="Description" required error={errors.description?.message} className="form-field--full"><textarea rows="3" {...register("description", { required: "Description is required" })} /></FormField>
@@ -29,4 +37,3 @@ export function MenuItemFormModal({ open, item, menus, onClose, onSubmit, loadin
     </form>
   </Modal>;
 }
-
