@@ -604,25 +604,79 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
   .order-builder__table { margin-bottom: 17px; }
   .menu-picker { max-height: 380px; }
   .kitchen-live-actions { width: 100%; justify-content: space-between; }
-  .login-page--single { padding: var(--space-4) 16px; }
   .login-page--single {
     min-height: 100dvh;
+    padding: 16px;
     place-items: center;
+    overflow-x: hidden;
+    overflow-y: auto;
   }
 
   .login-page--single .login-panel--single {
-    min-height: 0;
+    min-height: calc(100dvh - 32px);
     padding: 0;
+    display: flex;
     align-items: center;
+    justify-content: center;
   }
 
   .login-page--single .login-shell {
+    width: 100%;
+    max-width: 420px;
     align-self: center;
+    overflow: visible;
   }
 
-  .login-page--single .login-card { padding: var(--space-4) 17px; border: 1px solid var(--border); background: rgba(255,255,255,.94); box-shadow: 0 20px 55px rgba(101,54,46,.12); }
-  .login-page--single .login-card__heading h2 { font-size: 1.95rem; }
-  .login-decoration__shape { opacity: .45; }
+  .login-page--single .brand--login {
+    margin-bottom: 14px;
+  }
+
+  .login-page--single .brand--login .brand__mark {
+    width: 44px;
+    height: 44px;
+  }
+
+  .login-page--single .login-card {
+    width: 100%;
+    padding: 20px;
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    background: rgba(255,255,255,.96);
+    box-shadow: 0 18px 45px rgba(101,54,46,.12);
+  }
+
+  .login-page--single .login-card__heading {
+    margin-bottom: 18px;
+  }
+
+  .login-page--single .login-card__heading h2 {
+    margin: 6px 0;
+    font-size: 1.75rem;
+    letter-spacing: 0;
+  }
+
+  .login-page--single .login-card__heading p {
+    font-size: .86rem;
+  }
+
+  .login-page--single .login-card form {
+    gap: 14px;
+  }
+
+  .login-page--single .form-field__label {
+    font-size: .78rem;
+  }
+
+  .login-page--single .form-field input {
+    min-height: 48px;
+    font-size: 16px;
+  }
+
+  .login-page--single .button--lg {
+    min-height: 48px;
+  }
+
+  .login-decoration__shape { display: none; }
 }
 
 @media (max-width: 520px) {
@@ -1053,11 +1107,11 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 @media (max-width: 420px) {
   .page-content { padding-inline: 10px; }
   .login-page--single {
-    padding: 12px;
+    padding: 14px;
   }
 
   .login-page--single .login-card {
-    padding: 15px;
+    padding: 18px 16px;
   }
 
   .login-page--single .login-card__heading {
@@ -1065,7 +1119,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
   }
 
   .login-page--single .login-card__heading h2 {
-    font-size: 1.55rem;
+    font-size: 1.62rem;
   }
 
   .login-page--single .login-card form {
