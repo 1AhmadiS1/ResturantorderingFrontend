@@ -66,6 +66,52 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 .brand { color: #3a292c; }
 .brand strong { color: var(--red); }
 .brand__mark { color: #fff; background: linear-gradient(145deg, #f05b50, #d93b35); box-shadow: 0 8px 20px rgba(218, 59, 53, .2); }
+.brand__mark--jump {
+  position: relative;
+  transform-style: preserve-3d;
+  animation: brand-icon-hop 3.8s ease-in-out infinite;
+  will-change: transform, box-shadow;
+}
+
+.brand__mark--jump svg {
+  animation: brand-icon-tilt 3.8s ease-in-out infinite;
+  transform-origin: center;
+}
+
+@keyframes brand-icon-hop {
+  0%, 72%, 100% {
+    transform: translateY(0) rotateX(0deg) rotateZ(0deg);
+    box-shadow: 0 8px 20px rgba(218, 59, 53, .2);
+  }
+
+  78% {
+    transform: translateY(-7px) rotateX(18deg) rotateZ(-5deg);
+    box-shadow: 0 18px 26px rgba(218, 59, 53, .24);
+  }
+
+  84% {
+    transform: translateY(0) rotateX(0deg) rotateZ(3deg);
+    box-shadow: 0 7px 16px rgba(218, 59, 53, .18);
+  }
+
+  90% {
+    transform: translateY(-3px) rotateX(10deg) rotateZ(-2deg);
+  }
+}
+
+@keyframes brand-icon-tilt {
+  0%, 72%, 100% { transform: translateZ(0) rotateZ(0deg); }
+  78% { transform: translateZ(10px) rotateZ(7deg); }
+  84% { transform: translateZ(0) rotateZ(-4deg); }
+  90% { transform: translateZ(6px) rotateZ(3deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .brand__mark--jump,
+  .brand__mark--jump svg {
+    animation: none;
+  }
+}
 
 .login-page { grid-template-columns: minmax(480px, 1.618fr) minmax(380px, 1fr); background: #fffaf7; }
 .login-visual {
