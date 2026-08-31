@@ -1,10 +1,11 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ImageOff, Pencil, Plus, Trash2, UtensilsCrossed } from "lucide-react";
 import { apiClient, getApiError, getCollection } from "../../lib/apiClient";
 import { Button } from "../../shared/components/Button";
 import { ConfirmDialog } from "../../shared/components/ConfirmDialog";
 import { PageHeader } from "../../shared/components/PageHeader";
+import { Pagination } from "../../shared/components/Pagination";
 import { SearchField } from "../../shared/components/SearchField";
 import { EmptyState, ErrorState, LoadingState } from "../../shared/components/StateView";
 import { useToast } from "../../shared/components/ToastProvider";
@@ -14,6 +15,8 @@ import { useRestaurantScope } from "../restaurants/useRestaurantScope";
 import { MenuFormModal } from "./MenuFormModal";
 import { MenuItemFormModal } from "./MenuItemFormModal";
 
+const MENU_ITEM_PAGE_SIZE = 10;
+
 export default function MenuPage() {
   const { user } = useAuth();
   const { restaurantId, restaurant } = useRestaurantScope();
@@ -21,6 +24,7 @@ export default function MenuPage() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("");
+  const [offset, setOffset] = useState(0);
   const [itemModal, setItemModal] = useState({ open: false, item: null });
   const [menuModal, setMenuModal] = useState({ open: false, menu: null });
   const [deleteItem, setDeleteItem] = useState(null);
@@ -28,8 +32,15 @@ export default function MenuPage() {
   const menusQuery = useQuery({ queryKey: ["menus", restaurantId], queryFn: () => getCollection("/menu/", { limit: 100, restuarant: restaurantId || undefined }) });
   const scopedMenuId = menusQuery.data?.results?.[0]?.id;
   const itemsQuery = useQuery({
-    queryKey: ["menuitems", restaurantId, scopedMenuId],
-    queryFn: () => getCollection("/menuitems/", { limit: 500, ordering: "name", menu: restaurantId ? scopedMenuId : undefined }),
+    queryKey: ["menuitems", restaurantId, scopedMenuId, search, category, offset],
+    queryFn: () => getCollection("/menuitems/", {
+      limit: MENU_ITEM_PAGE_SIZE,
+      offset,
+      ordering: "name",
+      menu: restaurantId ? scopedMenuId : undefined,
+      search: search || undefined,
+      category: category || undefined,
+    }),
     enabled: !restaurantId || Boolean(scopedMenuId),
   });
   const restaurantsQuery = useQuery({ queryKey: ["restaurants", "options"], queryFn: () => getCollection("/restaurants/", { limit: 100 }), enabled: canManage && !restaurantId });
@@ -41,16 +52,24 @@ export default function MenuPage() {
   const items = itemsQuery.data?.results || [];
   const restaurantOptions = restaurantId && restaurant ? [restaurant] : restaurantsQuery.data?.results || [];
   const categories = [...new Set(items.map((item) => item.category))].sort();
-  const visibleItems = useMemo(() => items.filter((item) => (!category || item.category === category) && (!search || `${item.name} ${item.description} ${item.category}`.toLowerCase().includes(search.toLowerCase()))), [items, search, category]);
+  const visibleItems = items;
+  const handleSearchChange = (value) => {
+    setSearch(value);
+    setOffset(0);
+  };
+  const handleCategoryChange = (event) => {
+    setCategory(event.target.value);
+    setOffset(0);
+  };
 
   if (menusQuery.isLoading || itemsQuery.isLoading) return <LoadingState label="Loading the menu..." />;
   if (menusQuery.isError || itemsQuery.isError) return <ErrorState onRetry={() => { menusQuery.refetch(); itemsQuery.refetch(); }} />;
 
   return <div className="page-stack">
     <PageHeader title="Menu" description={canManage ? "Add dishes and keep prices current." : "See what is available."} actions={canManage && <div className="button-group"><Button variant="secondary" onClick={() => setMenuModal({ open: true, menu: menusQuery.data.results[0] || null })}>{menusQuery.data.count ? <><Pencil size={17} /> Edit menu</> : <><Plus size={17} /> Create menu</>}</Button><Button disabled={!menusQuery.data.count} onClick={() => setItemModal({ open: true, item: null })}><Plus size={18} /> Add item</Button></div>} />
-    <div className="toolbar"><SearchField value={search} onChange={setSearch} placeholder="Search menu items..." /><select value={category} onChange={(event) => setCategory(event.target.value)}><option value="">All categories</option>{categories.map((value) => <option value={value} key={value}>{value}</option>)}</select></div>
+    <div className="toolbar"><SearchField value={search} onChange={handleSearchChange} placeholder="Search menu items..." /><select value={category} onChange={handleCategoryChange}><option value="">All categories</option>{categories.map((value) => <option value={value} key={value}>{value}</option>)}</select></div>
     {menusQuery.data.results.length > 1 && <div className="menu-contexts">{menusQuery.data.results.map((menu) => <span key={menu.id}><UtensilsCrossed size={15} /> {menu.name} · {menu.restaurant_name}</span>)}</div>}
-    {visibleItems.length ? <section className="menu-grid">{visibleItems.map((item) => <article className="menu-card" key={item.id}><div className="menu-card__image">{item.image ? <img src={item.image} alt={item.name} /> : <ImageOff size={28} />}{canManage && <div className="menu-card__actions"><button onClick={() => setItemModal({ open: true, item })} title="Edit"><Pencil size={17} /></button><button onClick={() => setDeleteItem(item)} title="Delete"><Trash2 size={17} /></button></div>}</div><div className="menu-card__content"><div><span>{item.category}</span><strong>{formatCurrency(item.price)}</strong></div><h2>{item.name}</h2><p>{item.description}</p><small>{item.restaurant_name}</small></div></article>)}</section> : <EmptyState title="No menu items found" message={search || category ? "Try changing your search or category." : canManage ? "Add your first menu item to get started." : "The restaurant has not added menu items yet."} />}
+    {visibleItems.length ? <><section className="menu-grid">{visibleItems.map((item) => <article className="menu-card" key={item.id}><div className="menu-card__image">{item.image ? <img src={item.image} alt={item.name} /> : <ImageOff size={28} />}{canManage && <div className="menu-card__actions"><button onClick={() => setItemModal({ open: true, item })} title="Edit"><Pencil size={17} /></button><button onClick={() => setDeleteItem(item)} title="Delete"><Trash2 size={17} /></button></div>}</div><div className="menu-card__content"><div><span>{item.category}</span><strong>{formatCurrency(item.price)}</strong></div><h2>{item.name}</h2><p>{item.description}</p><small>{item.restaurant_name}</small></div></article>)}</section><Pagination count={itemsQuery.data?.count || 0} offset={offset} limit={MENU_ITEM_PAGE_SIZE} onChange={setOffset} /></> : <EmptyState title="No menu items found" message={search || category ? "Try changing your search or category." : canManage ? "Add your first menu item to get started." : "The restaurant has not added menu items yet."} />}
     <MenuItemFormModal open={itemModal.open} item={itemModal.item} menus={menusQuery.data.results} categories={categories} loading={itemMutation.isPending} onClose={() => setItemModal({ open: false, item: null })} onSubmit={(data) => itemMutation.mutate({ data, item: itemModal.item })} />
     <MenuFormModal open={menuModal.open} menu={menuModal.menu} restaurants={restaurantOptions} loading={menuMutation.isPending} onClose={() => setMenuModal({ open: false, menu: null })} onSubmit={(data) => menuMutation.mutate({ data, menu: menuModal.menu })} />
     <ConfirmDialog open={Boolean(deleteItem)} title={`Delete ${deleteItem?.name}?`} message="This removes the item from the menu. Existing order history may still reference it." loading={deleteMutation.isPending} onClose={() => setDeleteItem(null)} onConfirm={() => deleteMutation.mutate(deleteItem)} />
