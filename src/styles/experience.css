@@ -605,6 +605,21 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
   .menu-picker { max-height: 380px; }
   .kitchen-live-actions { width: 100%; justify-content: space-between; }
   .login-page--single { padding: var(--space-4) 16px; }
+  .login-page--single {
+    min-height: 100dvh;
+    place-items: center;
+  }
+
+  .login-page--single .login-panel--single {
+    min-height: 0;
+    padding: 0;
+    align-items: center;
+  }
+
+  .login-page--single .login-shell {
+    align-self: center;
+  }
+
   .login-page--single .login-card { padding: var(--space-4) 17px; border: 1px solid var(--border); background: rgba(255,255,255,.94); box-shadow: 0 20px 55px rgba(101,54,46,.12); }
   .login-page--single .login-card__heading h2 { font-size: 1.95rem; }
   .login-decoration__shape { opacity: .45; }
@@ -1037,6 +1052,31 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 
 @media (max-width: 420px) {
   .page-content { padding-inline: 10px; }
+  .login-page--single {
+    padding: 12px;
+  }
+
+  .login-page--single .login-card {
+    padding: 15px;
+  }
+
+  .login-page--single .login-card__heading {
+    margin-bottom: 13px;
+  }
+
+  .login-page--single .login-card__heading h2 {
+    font-size: 1.55rem;
+  }
+
+  .login-page--single .login-card form {
+    gap: 12px;
+  }
+
+  .login-page--single .login-card__help,
+  .login-page--single .login-capabilities {
+    display: none;
+  }
+
   .stats-grid { gap: 7px; }
   .stat-card {
     min-height: 80px;
