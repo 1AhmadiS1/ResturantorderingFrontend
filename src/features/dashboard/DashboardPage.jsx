@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
-import { getCollection } from "../../lib/apiClient";
+import { apiClient } from "../../lib/apiClient";
 import { formatCurrency, formatRelativeTime } from "../../shared/utils/formatters";
 import { StatusBadge } from "../../shared/components/StatusBadge";
 import { StatCard } from "../../shared/components/StatCard";
@@ -21,56 +21,36 @@ export default function DashboardPage() {
   const { user } = useAuth();
   const { restaurantId, restaurant } = useRestaurantScope();
   const pathFor = (path) => restaurantWorkspacePath(restaurantId, path);
-  const ordersQuery = useQuery({
-    queryKey: ["dashboard", "orders", restaurantId],
-    queryFn: () => getCollection("/orders/", { limit: 500, ordering: "-created_at", restuarant: restaurantId || undefined }),
-  });
-  const tablesQuery = useQuery({
-    queryKey: ["dashboard", "tables", restaurantId],
-    queryFn: () => getCollection("/tables/", { limit: 500, restaurant: restaurantId || undefined }),
-  });
-  const menusQuery = useQuery({
-    queryKey: ["dashboard", "menus", restaurantId],
-    queryFn: () => getCollection("/menu/", { limit: 100, restuarant: restaurantId || undefined }),
-    enabled: Boolean(restaurantId),
-  });
-  const scopedMenuId = menusQuery.data?.results?.[0]?.id;
-  const itemsQuery = useQuery({
-    queryKey: ["dashboard", "menuitems", restaurantId, scopedMenuId],
-    queryFn: () => getCollection("/menuitems/", { limit: 8, menu: restaurantId ? scopedMenuId : undefined }),
-    enabled: !restaurantId || Boolean(scopedMenuId),
-  });
-  const staffQuery = useQuery({
-    queryKey: ["dashboard", "staff", restaurantId],
-    queryFn: () => getCollection("/users/", { limit: 1, restaurant: restaurantId || undefined }),
-    enabled: ["owner", "platform_admin"].includes(user.role),
+  const dashboardQuery = useQuery({
+    queryKey: ["dashboard", restaurantId],
+    queryFn: async () => {
+      const { data } = await apiClient.get("/dashboard/", {
+        params: { restaurant: restaurantId || undefined },
+      });
+      return data;
+    },
   });
 
-  if (ordersQuery.isLoading || tablesQuery.isLoading || menusQuery.isLoading || itemsQuery.isLoading) {
+  if (dashboardQuery.isLoading) {
     return <LoadingState label="Preparing your dashboard..." />;
   }
 
-  if (ordersQuery.isError || tablesQuery.isError || menusQuery.isError || itemsQuery.isError) {
-    return (
-      <ErrorState
-        onRetry={() => {
-          ordersQuery.refetch();
-          tablesQuery.refetch();
-          menusQuery.refetch();
-          itemsQuery.refetch();
-        }}
-      />
-    );
+  if (dashboardQuery.isError) {
+    return <ErrorState onRetry={dashboardQuery.refetch} />;
   }
 
-  const orders = ordersQuery.data.results;
-  const tables = tablesQuery.data.results;
-  const menuItems = itemsQuery.data?.results || [];
-  const activeOrders = orders.filter((order) => ["pending", "preparing", "ready"].includes(order.status));
-  const completedRevenue = orders.filter((order) => order.status === "served").reduce((total, order) => total + Number(order.total_price), 0);
-  const availableTables = tables.filter((table) => table.status === "available").length;
-  const recentOrders = orders.slice(0, 6);
-  const menuHighlights = menuItems.slice(0, 5);
+  const dashboard = dashboardQuery.data || {};
+  const summary = dashboard.summary || {};
+  const kitchenPulse = dashboard.kitchen_pulse || {};
+  const activeOrdersCount = summary.active_orders ?? 0;
+  const todayOrdersCount = summary.today_orders ?? 0;
+  const todayRevenue = Number(summary.today_revenue);
+  const availableTables = summary.available_tables ?? 0;
+  const totalTables = summary.total_tables ?? 0;
+  const menuItemsCount = summary.menu_items_count ?? 0;
+  const staffCount = summary.staff_count ?? 0;
+  const recentOrders = dashboard.recent_orders || [];
+  const menuHighlights = dashboard.popular_items || [];
   const mainHighlight = menuHighlights[0];
   const secondaryHighlights = menuHighlights.slice(1);
   const firstName = user.first_name || user.email.split("@")[0];
@@ -93,10 +73,10 @@ export default function DashboardPage() {
       </div>
 
       <section className="stats-grid grid grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-4">
-        <StatCard icon={ClipboardList} label="Active orders" value={activeOrders.length} detail={`${ordersQuery.data.count} total`} />
-        <StatCard icon={CircleDollarSign} label="Sales" value={formatCurrency(completedRevenue)} detail="Served orders" tone="green" />
-        <StatCard icon={Table2} label="Tables ready" value={`${availableTables} / ${tablesQuery.data.count}`} detail={tables.length ? `${Math.round((availableTables / tables.length) * 100)}% available` : "No tables"} tone="amber" />
-        <StatCard icon={UtensilsCrossed} label="Menu items" value={itemsQuery.data?.count || 0} detail="On the menu" tone="blue" />
+        <StatCard icon={ClipboardList} label="Active orders" value={activeOrdersCount} detail={`${todayOrdersCount} today`} />
+        <StatCard icon={CircleDollarSign} label="Sales" value={formatCurrency(Number.isFinite(todayRevenue) ? todayRevenue : 0)} detail="Served orders today" tone="green" />
+        <StatCard icon={Table2} label="Tables ready" value={`${availableTables} / ${totalTables}`} detail={totalTables ? `${Math.round((availableTables / totalTables) * 100)}% available` : "No tables"} tone="amber" />
+        <StatCard icon={UtensilsCrossed} label="Menu items" value={menuItemsCount} detail="On the menu" tone="blue" />
       </section>
 
       {mainHighlight && (
@@ -129,7 +109,7 @@ export default function DashboardPage() {
                 </div>
                 <div className="min-w-0">
                   <strong className="line-clamp-2 text-xs leading-tight text-[#3e2d30] lg:text-sm">{item.name}</strong>
-                  <span className="mt-1 block text-[0.58rem] font-extrabold uppercase tracking-wide text-brand-700 lg:text-[0.68rem]">{item.category || formatCurrency(item.price)}</span>
+                  <span className="mt-1 block text-[0.58rem] font-extrabold uppercase tracking-wide text-brand-700 lg:text-[0.68rem]">{item.orders_count} orders · {formatCurrency(item.price)}</span>
                 </div>
               </Link>
             ))}
@@ -155,7 +135,7 @@ export default function DashboardPage() {
                   <strong className="col-start-1 row-start-1 text-brand-700 lg:col-auto lg:row-auto">#{order.id}</strong>
                   <span className="col-start-1 row-start-2 text-[#6e5d60] lg:col-auto lg:row-auto">Table {order.table_number}</span>
                   <span className="recent-order__items hidden text-[#6e5d60] lg:block">
-                    {order.items.length} item{order.items.length === 1 ? "" : "s"}
+                    {order.items_count} item{order.items_count === 1 ? "" : "s"}
                   </span>
                   <span className="col-start-2 row-start-2 justify-self-end lg:col-auto lg:row-auto lg:justify-self-auto"><StatusBadge status={order.status} /></span>
                   <span className="hidden text-[#6e5d60] lg:block">{formatRelativeTime(order.created_at)}</span>
@@ -178,7 +158,7 @@ export default function DashboardPage() {
           </div>
           <div className="pulse-list mb-4 grid gap-2">
             {["pending", "preparing", "ready"].map((status) => {
-              const count = activeOrders.filter((order) => order.status === status).length;
+              const count = kitchenPulse[status] ?? 0;
               return (
                 <div className="flex items-center justify-between rounded-lg bg-[#fffaf7] px-3 py-2" key={status}>
                   <StatusBadge status={status} />
@@ -205,7 +185,7 @@ export default function DashboardPage() {
           <Link to={pathFor("/menu")}><UtensilsCrossed /><span>Manage menu</span></Link>
           <Link to={pathFor("/tables")}><Table2 /><span>Manage tables</span></Link>
           <Link to={pathFor("/kitchen")}><ChefHat /><span>Kitchen display</span></Link>
-          <Link to={pathFor("/staff")}><Users /><span>{staffQuery.data?.count ?? 0} staff members</span></Link>
+          <Link to={pathFor("/staff")}><Users /><span>{staffCount} staff members</span></Link>
         </div>
       </section>
     </div>
