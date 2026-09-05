@@ -3,20 +3,27 @@
   color: #2f2325;
   background: #fff8f4;
   --bg: #fff8f4;
+
   --surface: #ffffff;
   --surface-2: #fff1ec;
   --surface-3: #ffe4db;
+  
   --border: #eadbd6;
   --border-soft: #f2e7e3;
+  
   --text: #2f2325;
+  
   --muted: #74676a;
   --muted-2: #9a8c8f;
+  
   --red: #e84b42;
   --red-dark: #c93630;
   --red-soft: #fee9e4;
+  
   --green: #319b67;
   --amber: #e69b2e;
   --blue: #4d82d1;
+  
   --space-1: 5px;
   --space-2: 8px;
   --space-3: 13px;
